@@ -5,8 +5,13 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.itunes.model.Arco;
+import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.Model;
+import it.polito.tdp.itunes.model.Track;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -34,10 +39,10 @@ public class FXMLController {
     private Button btnMassimo; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbCanzone"
-    private ComboBox<?> cmbCanzone; // Value injected by FXMLLoader
+    private ComboBox<Track> cmbCanzone; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGenere"
-    private ComboBox<?> cmbGenere; // Value injected by FXMLLoader
+    private ComboBox<Genre> cmbGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtMemoria"
     private TextField txtMemoria; // Value injected by FXMLLoader
@@ -48,16 +53,70 @@ public class FXMLController {
     @FXML
     void btnCreaLista(ActionEvent event) {
 
+    	txtResult.clear();
+    	
+    	Track canzone = cmbCanzone.getValue();
+    	Long bytes = null;
+    	try {
+    	bytes = Long.parseLong(txtMemoria.getText());
+    	} catch(NumberFormatException nfe){
+    		txtResult.setText("Errore: inserire valore numerico in byte per la memoria");
+    		nfe.printStackTrace();
+    		return;
+    	}
+    	if(bytes.equals(null)) {
+    		txtResult.setText("Errore: inserire valore memoria");
+    		return;
+    	}
+    	
+    	if(canzone.equals(null)) {
+    		txtResult.setText("Errore: Inserire canzone");
+    		return;
+    	}
+    	
+    	List<Track> canzoni = this.model.listaCanzoni(canzone, bytes);
+    	
+    	txtResult.appendText("Lista canzoni:\n");
+    	for(Track t : canzoni) {
+    		txtResult.appendText(t+"\n");
+    	}
+    	
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
 
+    	txtResult.clear();
+    	cmbCanzone.getItems().clear();
+    	
+    	Genre genere = cmbGenere.getValue();
+    	if(genere == null) {
+    		txtResult.appendText("Errore: Inserire genere");
+    		return;
+    	}
+    	
+    	this.model.creaGrafo(genere);
+    	
+    	cmbCanzone.getItems().addAll(this.model.getVertici());
+    	int nVert = model.getNvert();
+    	int nArc = model.getNArc();
+    	
+    	txtResult.appendText("Grafo creato!\n");
+    	txtResult.appendText("# Vertici: "+nVert+"\n# Archi: "+nArc);
+    	
+    	
     }
 
     @FXML
     void doDeltaMassimo(ActionEvent event) {
     	
+    	txtResult.clear();
+    	
+    	Arco arcoMax = this.model.getArcoMax();
+    	
+    	txtResult.appendText("COPPIA CANZONE DELTA MASSIMO:\n");
+    	txtResult.appendText(arcoMax.getT1() +" *** "+arcoMax.getT2()+" -> "+arcoMax.getPeso());
     	
     }
 
@@ -75,6 +134,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	cmbGenere.getItems().addAll(this.model.getAllGeneri());
     }
 
 }
